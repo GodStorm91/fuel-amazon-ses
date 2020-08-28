@@ -5,7 +5,7 @@ If you are using AWS SDK for PHP, you don't have to do anything.
 
 # Install
 
-In the repository's root directory, run "git clone git://github.com/GodStorm91/fuel-amazon-ses.git fuel/packages/amazon-ses" (without quotes).
+In the repository's root directory, run `git clone git://github.com/GodStorm91/fuel-amazon-ses.git fuel/packages/amazon-ses`.
 This packages support AWS Signature V4 ( with will be effective from 2020 October).
 If you are using V3 Signature ( can detect by the line below), please consider upgrade your package.
 
