@@ -1,6 +1,7 @@
 # Amazon Simple Email Service (SES)
 
-Adds basic support for Amazon's Simple Email Service to the FuelPHP 1.1 Email Driver.
+Adds basic support for Amazon's Simple Email Service to the FuelPHP 1.1 Email Driver. (Support AWS Signature V4).
+If you are using AWS SDK for PHP, you don't have to do anything.
 
 # Install
 
