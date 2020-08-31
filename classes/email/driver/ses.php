@@ -71,8 +71,8 @@ class Email_Driver_Ses extends \Email_Driver {
 			$params['ReplyToAddresses.member.'.($i+1)] = static::format_addresses(array($value));
 			++$i;
 		}	
-		$date = date(self::ISO8601_BASIC);
-		$dateRss = date(DATE_RSS);
+		$date = gmdate(self::ISO8601_BASIC);
+		$dateRss = gmdate(DATE_RSS);
 		
 		$curl = \Request::forge('https://email.' . $this->region . '.amazonaws.com/', array(
 			'driver' => 'curl',
@@ -196,7 +196,7 @@ class Email_Driver_Ses extends \Email_Driver {
         $canonHeaders = [];
 
 		$canonHeaders[] = "host:" . 'email.' . $this->region . '.amazonaws.com';
-		$canonHeaders[] = "x-amz-date:" . date(self::ISO8601_BASIC);
+		$canonHeaders[] = "x-amz-date:" . gmdate(self::ISO8601_BASIC);
         $signedHeadersString = implode(';', array_keys($aggregate));
         $canon .= implode("\n", $canonHeaders) . "\n\n"
             . $signedHeadersString . "\n"
