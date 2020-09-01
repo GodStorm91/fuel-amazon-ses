@@ -1,3 +1,5 @@
+[![Buy us a tree](https://img.shields.io/badge/Treeware-%F0%9F%8C%B3-lightgreen)](https://plant.treeware.earth/Godstorm91/fuel-amazon-ses)
+
 # Amazon Simple Email Service (SES)
 
 Adds basic support for Amazon's Simple Email Service to the FuelPHP 1.1 Email Driver. (Support AWS Signature V4).
