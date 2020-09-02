@@ -22,6 +22,7 @@ class Email_Driver_Ses extends \Email_Driver {
 	
 	public function __construct($config) 
 	{
+		$config["encode_headers"] = false;
 		parent::__construct($config);
 		\Config::load('ses', true);
 		
