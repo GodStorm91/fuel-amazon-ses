@@ -36,6 +36,11 @@ class Email_Driver_Ses extends \Email_Driver {
 	 */	
 	protected function _send()
 	{
+		if (!empty($this->attachments))
+		{
+			return $this->_send_with_attachments();
+		}
+		
 		$params = array(
 			'Action' => 'SendEmail',
 			'Version' => '2010-12-01',
@@ -95,6 +100,99 @@ class Email_Driver_Ses extends \Email_Driver {
 		}
 		
 		\Log::debug("Send mail ok " . json_encode($response->response()));
+		return true;
+	}
+	
+	/**
+	 * Sends the email with attachments using the Amazon SES Raw Email feature
+	 * 
+	 * @return boolean	True if successful, false if not.
+	 */
+	protected function _send_with_attachments()
+	{
+		$boundary = sha1(time());
+		$date = date('r');
+		
+		// Start building the raw message
+		$raw_message = "Date: {$date}\n";
+		$raw_message .= "Subject: {$this->subject}\n";
+		$raw_message .= "From: " . static::format_addresses(array($this->config['from'])) . "\n";
+		
+		// Add To, CC, BCC
+		if (!empty($this->to))
+		{
+			$raw_message .= "To: " . static::format_addresses($this->to) . "\n";
+		}
+		
+		if (!empty($this->cc))
+		{
+			$raw_message .= "CC: " . static::format_addresses($this->cc) . "\n";
+		}
+		
+		if (!empty($this->reply_to))
+		{
+			$raw_message .= "Reply-To: " . static::format_addresses($this->reply_to) . "\n";
+		}
+		
+		// Message headers
+		$raw_message .= "MIME-Version: 1.0\n";
+		$raw_message .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\n\n";
+		
+		// Message body
+		$raw_message .= "--{$boundary}\n";
+		$raw_message .= "Content-Type: text/plain; charset=\"{$this->config['charset']}\"\n";
+		$raw_message .= "Content-Transfer-Encoding: 7bit\n\n";
+		$raw_message .= $this->body . "\n\n";
+		
+		// Attachments
+		foreach ($this->attachments as $attachment)
+		{
+			$filename = $attachment['name'];
+			$content = $attachment['contents'];
+			$mime = $attachment['mime'];
+			
+			$raw_message .= "--{$boundary}\n";
+			$raw_message .= "Content-Type: {$mime}; name=\"{$filename}\"\n";
+			$raw_message .= "Content-Disposition: attachment; filename=\"{$filename}\"\n";
+			$raw_message .= "Content-Transfer-Encoding: base64\n\n";
+			$raw_message .= chunk_split(base64_encode($content)) . "\n\n";
+		}
+		
+		// End of message
+		$raw_message .= "--{$boundary}--";
+		
+		// Base64 encode the raw message
+		$raw_message_base64 = base64_encode($raw_message);
+		
+		// Set SES parameters for raw email
+		$params = array(
+			'Action' => 'SendRawEmail',
+			'Version' => '2010-12-01',
+			'RawMessage.Data' => $raw_message_base64
+		);
+		
+		$date = gmdate(self::ISO8601_BASIC);
+		$dateRss = gmdate(DATE_RSS);
+		
+		$curl = \Request::forge('https://email.' . $this->region . '.amazonaws.com/', array(
+			'driver' => 'curl',
+			'method' => 'post'
+			))
+			->set_header('Content-Type','application/x-www-form-urlencoded')
+			->set_header('date', $dateRss)
+			->set_header('host', 'email.' . $this->region . '.amazonaws.com')
+			->set_header('x-amz-date', $date);
+		$signature = $this->_sign_signature_v4($params);
+		$curl->set_header('Authorization', $signature);
+		$response = $curl->execute($params);
+		
+		if (intval($response->response()->status / 100) != 2) 
+		{
+			\Log::debug("Send mail with attachments errors " . json_encode($response->response()));
+			return false;
+		}
+		
+		\Log::debug("Send mail with attachments ok " . json_encode($response->response()));
 		return true;
 	}
 
